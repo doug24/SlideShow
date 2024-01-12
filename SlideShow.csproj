@@ -6,12 +6,18 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<UseWPF>true</UseWPF>
-		<UseWindowsForms>true</UseWindowsForms>
+		<UseWindowsForms>false</UseWindowsForms>
 		<AssemblyVersion>0.1.0.0</AssemblyVersion>
 		<FileVersion>0.1.0.0</FileVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="ImageHelper.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="NaturalSort.Extension" Version="4.2.0" />
 		<PackageReference Include="System.Drawing.Common" Version="8.0.0" />
 	</ItemGroup>
 

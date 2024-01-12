@@ -5,8 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SlideShow"
         mc:Ignorable="d"
-        Title="Jeremy's Slide Show" Height="450" Width="800"
+        Title="Slide Show" Height="450" Width="800"
         KeyDown="Window_KeyDown"
-        Background="Black" WindowStartupLocation="CenterOwner" WindowState="Maximized">
-    <Image Name="targetImage" Stretch="Uniform"/>
+        Background="Black" 
+        WindowStartupLocation="CenterScreen" 
+        WindowState="Minimized"
+        WindowStyle="None"
+        Cursor="None">
+
+    <Grid>
+        <Image Name="targetImage1" Stretch="Uniform" Opacity="1"/>
+        <Image Name="targetImage2" Stretch="Uniform" Opacity="0"/>
+        <TextBlock Name="info" Foreground="WhiteSmoke" 
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Bottom"
+                   Margin="16,0,0,0"/>
+    </Grid>
 </Window>
