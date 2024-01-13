@@ -47,10 +47,12 @@ public partial class MainWindow : Window
         {
             Interval = TimeSpan.FromSeconds(120),
         };
-        keepAlive.Tick += (s, e) => NativeMethods.KeepAwake();
+        keepAlive.Tick += (s, e) => Native.KeepAwake();
 
         Loaded += (s, e) =>
         {
+            var result = Native.UseImmersiveDarkMode(this, true);
+
             var location = @"C:\Users\djper\OneDrive\Pictures\1974 Show";
 
             // Uncomment this section if you want a folder dialog;
@@ -64,14 +66,14 @@ public partial class MainWindow : Window
             images = ImageLocator.GetImagesFromLocation(location);
             images = [.. images.OrderBy(x => x, StringComparison.OrdinalIgnoreCase.WithNaturalSort())];
             //images.Shuffle();
-            NativeMethods.KeepAwake();
+            Native.KeepAwake();
             ShowImage(0);
             timer.Start();
         };
 
         Closing += (s, e) =>
         {
-            NativeMethods.AllowSleep();
+            Native.AllowSleep();
         };
     }
 
