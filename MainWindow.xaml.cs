@@ -14,7 +14,7 @@ public partial class MainWindow : Window
     private int currentIndex = 0;
     private bool isTargetImage1FG;
     private readonly DispatcherTimer timer;
-    private readonly DispatcherTimer keepAlive;
+    private readonly DispatcherTimer keepAwake;
     private readonly DoubleAnimation daIn;
     private readonly DoubleAnimation daOut;
 
@@ -43,11 +43,12 @@ public partial class MainWindow : Window
         };
         timer.Tick += (s, e) => ShowNextImage();
 
-        keepAlive = new()
+        keepAwake = new()
         {
-            Interval = TimeSpan.FromSeconds(120),
+            Interval = TimeSpan.FromSeconds(90),
         };
-        keepAlive.Tick += (s, e) => Native.KeepAwake();
+        keepAwake.Tick += (s, e) => Native.KeepAwake();
+        keepAwake.Start();
 
         Loaded += (s, e) =>
         {
@@ -73,6 +74,8 @@ public partial class MainWindow : Window
 
         Closing += (s, e) =>
         {
+            timer.Stop();
+            keepAwake.Stop();
             Native.AllowSleep();
         };
     }

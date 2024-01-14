@@ -11,7 +11,7 @@ internal static partial class Native
 {
     internal static void KeepAwake()
     {
-        PInvoke.SetThreadExecutionState(EXECUTION_STATE.ES_SYSTEM_REQUIRED);
+        PInvoke.SetThreadExecutionState(EXECUTION_STATE.ES_DISPLAY_REQUIRED);
     }
 
     internal static void AllowSleep()
