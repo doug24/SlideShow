@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Microsoft.Win32;
 using NaturalSort.Extension;
 
 namespace SlideShow;
@@ -54,22 +55,40 @@ public partial class MainWindow : Window
         {
             var result = Native.UseImmersiveDarkMode(this, true);
 
-            var location = @"C:\Users\djper\OneDrive\Pictures\1974 Show";
+            string location = Properties.Settings.Default.ImageDirectory;
 
-            // Uncomment this section if you want a folder dialog;
-            // otherwise, manually set the 'location' above.
-            //var dlg = new FolderBrowserDialog { SelectedPath = location };
-            //if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            //{
-            //   location = dlg.SelectedPath;
-            //}
+            if (string.IsNullOrEmpty(location) || !Directory.Exists(location))
+            {
+                var dlg = new OpenFolderDialog
+                {
+                    Title = "Slide Show Images Directory",
+                    Multiselect = false,
+                };
+                if (dlg.ShowDialog() ?? false)
+                {
+                    location = dlg.FolderName;
+                    Properties.Settings.Default.ImageDirectory = location;
+                    Properties.Settings.Default.Save();
+                }
+            }
 
-            images = ImageLocator.GetImagesFromLocation(location);
-            images = [.. images.OrderBy(x => x, StringComparison.OrdinalIgnoreCase.WithNaturalSort())];
-            //images.Shuffle();
-            Native.KeepAwake();
-            ShowImage(0);
-            timer.Start();
+            if (!string.IsNullOrEmpty(location) && Directory.Exists(location))
+            {
+                images = ImageLocator.GetImagesFromLocation(location);
+                if (images.Count > 0)
+                {
+                    images = [.. images.OrderBy(x => x, StringComparison.OrdinalIgnoreCase.WithNaturalSort())];
+                    //images.Shuffle();
+                    Native.KeepAwake();
+                    ShowImage(0);
+                    timer.Start();
+                }
+                else
+                {
+                    MessageBox.Show($"No image files were found in the directory {location}",
+                        "Slide Show", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         };
 
         Closing += (s, e) =>
