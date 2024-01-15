@@ -20,6 +20,11 @@ public partial class Goto : Window
 
         input.Focus();
         input.SelectAll();
+
+        Loaded += (s, e) => 
+        {
+            _ = Native.UseImmersiveDarkMode(this, true);
+        };
     }
 
     public int Index
@@ -38,7 +43,7 @@ public partial class Goto : Window
 
     private void OKButton_Click(object sender, RoutedEventArgs e)
     {
-        DialogResult = true;
+        DialogResult = Index > -1;
         Close();
     }
 }

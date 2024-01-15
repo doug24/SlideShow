@@ -6,12 +6,23 @@
         xmlns:local="clr-namespace:SlideShow"
         mc:Ignorable="d"
         Title="Go To Index" 
+        WindowStyle="ToolWindow"
         MinWidth="300"
         MinHeight="100"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
         SizeToContent="WidthAndHeight"
+        Background="#545454"
         FocusManager.FocusedElement="{Binding ElementName=input}">
+
+    <Window.Resources>
+        <Style TargetType="Label">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="LightGray"/>
+        </Style>
+    </Window.Resources>
 
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">

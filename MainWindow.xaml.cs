@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
@@ -14,14 +15,23 @@ public partial class MainWindow : Window
     private List<string> images = [];
     private int currentIndex = 0;
     private bool isTargetImage1FG;
+    private readonly SettingsViewModel viewModel;
     private readonly DispatcherTimer timer;
     private readonly DispatcherTimer keepAwake;
     private readonly DoubleAnimation daIn;
     private readonly DoubleAnimation daOut;
+    private State savedState = new(false);
 
     public MainWindow()
     {
         InitializeComponent();
+
+        viewModel = new SettingsViewModel();
+        viewModel.Initialize();
+        DataContext = viewModel;
+        settingsView.DataContext = viewModel;
+        viewModel.PropertyChanged += ViewModel_PropertyChanged;
+        viewModel.SettingsClosed += ViewModel_SettingsClosed;
 
         daIn = new()
         {
@@ -40,7 +50,7 @@ public partial class MainWindow : Window
 
         timer = new()
         {
-            Interval = TimeSpan.FromSeconds(6),
+            Interval = TimeSpan.FromSeconds(viewModel.Interval),
         };
         timer.Tick += (s, e) => ShowNextImage();
 
@@ -53,53 +63,36 @@ public partial class MainWindow : Window
 
         Loaded += (s, e) =>
         {
-            var result = Native.UseImmersiveDarkMode(this, true);
+            _ = Native.UseImmersiveDarkMode(this, true);
+            info.Visibility = viewModel.ShowInfo ? Visibility.Visible : Visibility.Collapsed;
+            status.Visibility = viewModel.ShowInfo ? Visibility.Visible : Visibility.Collapsed;
 
             string location = Properties.Settings.Default.ImageDirectory;
 
             if (string.IsNullOrEmpty(location) || !Directory.Exists(location))
             {
-                var dlg = new OpenFolderDialog
-                {
-                    Title = "Slide Show Images Directory",
-                    Multiselect = false,
-                };
-                if (dlg.ShowDialog() ?? false)
-                {
-                    location = dlg.FolderName;
-                    Properties.Settings.Default.ImageDirectory = location;
-                    Properties.Settings.Default.Save();
-                }
+                location = GetImageDirectory();
             }
 
-            if (!string.IsNullOrEmpty(location) && Directory.Exists(location))
+            if (LoadImages(location))
             {
-                images = ImageLocator.GetImagesFromLocation(location);
-                if (images.Count > 0)
-                {
-                    images = [.. images.OrderBy(x => x, StringComparison.OrdinalIgnoreCase.WithNaturalSort())];
-                    //images.Shuffle();
-                    Native.KeepAwake();
-                    ShowImage(0);
-                    timer.Start();
-                }
-                else
-                {
-                    MessageBox.Show($"No image files were found in the directory {location}",
-                        "Slide Show", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                timer.Start();
+                status.Text = "⟳";
+                WindowState = WindowState.Maximized;
+                Native.KeepAwake();
             }
         };
 
         Closing += (s, e) =>
         {
             timer.Stop();
+            status.Text = "⊘";
             keepAwake.Stop();
             Native.AllowSleep();
         };
     }
 
-    private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    private void Window_KeyDown(object sender, KeyEventArgs e)
     {
         switch (e.Key)
         {
@@ -127,8 +120,80 @@ public partial class MainWindow : Window
                     GoTo();
                 }
                 break;
+            case Key.O:
+                if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+                {
+                    timer.Stop();
+                    status.Text = "⊘";
+                    string location = GetImageDirectory();
+                    if (LoadImages(location))
+                    {
+                        timer.Start();
+                        status.Text = "⟳";
+                    }
+                }
+                break;
+            case Key.F1:
+            case Key.OemQuestion:
+            case Key.Separator:
+                if (viewModel.Visible == Visibility.Collapsed)
+                {
+                    savedState = new(timer.IsEnabled);
+                    timer.Stop();
+                    status.Text = "⊘";
+                    Cursor = Cursors.Arrow;
+                    viewModel.Visible = Visibility.Visible;
+                }
+                else
+                {
+                    viewModel.Visible = Visibility.Collapsed;
+                    ViewModel_SettingsClosed(this, EventArgs.Empty);
+                }
+                break;
             default:
                 break;
+        }
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(SettingsViewModel.Interval):
+                bool enabled = timer.IsEnabled;
+                timer.Stop();
+                timer.Interval = TimeSpan.FromSeconds(viewModel.Interval);
+                if (enabled)
+                    timer.Start();
+                break;
+
+            case nameof(SettingsViewModel.ShowInfo):
+                info.Visibility = viewModel.ShowInfo ? Visibility.Visible : Visibility.Collapsed;
+                status.Visibility = viewModel.ShowInfo ? Visibility.Visible : Visibility.Collapsed;
+                break;
+
+            case nameof(SettingsViewModel.Sort):
+                if (viewModel.Sort)
+                    SortImages();
+                break;
+
+            case nameof(SettingsViewModel.Shuffle):
+                if (viewModel.Shuffle)
+                    ShuffleImages();
+                break;
+        }
+    }
+
+    private void ViewModel_SettingsClosed(object? sender, EventArgs e)
+    {
+        if (savedState.TimerEnabled)
+        {
+            timer.Start();
+            status.Text = "⟳";
+        }
+        if (WindowStyle == WindowStyle.None)
+        {
+            Cursor = Cursors.None;
         }
     }
 
@@ -136,17 +201,18 @@ public partial class MainWindow : Window
     {
         bool enabled = timer.IsEnabled;
         timer.Stop();
+        status.Text = "⊘";
 
         Goto dlg = new(currentIndex + 1, images.Count);
-        if (dlg.ShowDialog() ?? false && dlg.Index != -1)
+        if (dlg.ShowDialog() ?? false)
         {
             currentIndex = dlg.Index - 1;
             ShowImage(currentIndex);
         }
-
         if (enabled)
         {
             timer.Start();
+            status.Text = "⟳";
         }
     }
 
@@ -186,9 +252,15 @@ public partial class MainWindow : Window
     private void Pause()
     {
         if (timer.IsEnabled)
+        {
             timer.Stop();
+            status.Text = "⊘";
+        }
         else
+        {
             timer.Start();
+            status.Text = "⟳";
+        }
     }
 
     private void ShowImage(int index)
@@ -200,11 +272,10 @@ public partial class MainWindow : Window
         imageSource.EndInit();
         imageSource.Freeze();
 
-        if (index == 0)
+        if (targetImage1.Source == null)
         {
             targetImage1.Source = imageSource;
             isTargetImage1FG = true;
-            WindowState = WindowState.Maximized;
         }
         else
         {
@@ -230,5 +301,76 @@ public partial class MainWindow : Window
     {
         if (currentIndex > 0) currentIndex--;
         ShowImage(currentIndex);
+    }
+
+    private void ShuffleImages()
+    {
+        if (images.Count > 0)
+        {
+            images.Shuffle();
+            ShowImage(0);
+        }
+    }
+
+    private void SortImages()
+    {
+        if (images.Count > 0)
+        {
+            images = [.. images.OrderBy(x => x, StringComparison.OrdinalIgnoreCase.WithNaturalSort())];
+            ShowImage(0);
+        }
+    }
+
+    private static string GetImageDirectory()
+    {
+        string location = string.Empty;
+        var dlg = new OpenFolderDialog
+        {
+            Title = "Slide Show Images Directory",
+            Multiselect = false,
+        };
+
+        if (dlg.ShowDialog() ?? false)
+        {
+            location = dlg.FolderName;
+            Properties.Settings.Default.ImageDirectory = location;
+            Properties.Settings.Default.Save();
+        }
+        return location;
+    }
+
+    private bool LoadImages(string location)
+    {
+        if (!string.IsNullOrEmpty(location) && Directory.Exists(location))
+        {
+            images = ImageLocator.GetImagesFromLocation(location);
+            if (images.Count > 0)
+            {
+                if (viewModel.Sort)
+                {
+                    SortImages();
+                }
+                else if (viewModel.Shuffle)
+                {
+                    ShuffleImages();
+                }
+                return true;
+            }
+            else
+            {
+                MessageBox.Show($"No image files were found in the directory: {location}",
+                    "Slide Show", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        else
+        {
+            MessageBox.Show($"The directory was not found: {location}",
+                "Slide Show", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        return false;
+    }
+
+    private record State(bool TimerEnabled)
+    {
     }
 }

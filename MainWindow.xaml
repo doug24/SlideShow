@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SlideShow"
         mc:Ignorable="d"
-        Title="Slide Show" Height="450" Width="800"
+        Title="Slide Show" d:DesignHeight="640" d:DesignWidth="800"
         KeyDown="Window_KeyDown"
         Background="Black" 
         WindowStartupLocation="CenterScreen" 
@@ -16,9 +16,21 @@
     <Grid>
         <Image Name="targetImage1" Stretch="Uniform" Opacity="1"/>
         <Image Name="targetImage2" Stretch="Uniform" Opacity="0"/>
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Margin="16,0,0,0">
+        <TextBlock Name="status" Foreground="WhiteSmoke" Margin="0"
+                   FontFamily="Segoe UI Symbol" FontSize="18" 
+                   Text="⊘" VerticalAlignment="Bottom"/>
         <TextBlock Name="info" Foreground="WhiteSmoke" 
-                   HorizontalAlignment="Left" 
-                   VerticalAlignment="Bottom"
-                   Margin="16,0,0,0"/>
+                   Margin="12,0,0,3" VerticalAlignment="Bottom"
+                   Text="InfoText"/>
+        </StackPanel>
+        <local:SettingsView x:Name="settingsView" 
+                            Margin="12" 
+                            HorizontalAlignment="Left" 
+                            VerticalAlignment="Top"
+                            Visibility="{Binding Visible}"/>
     </Grid>
 </Window>

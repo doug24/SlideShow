@@ -1,17 +1,13 @@
-﻿namespace ImageLibrary;
+﻿using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
-public static class SlideShow
+namespace SlideShow;
+
+public static class Extensions
 {
-    private static readonly Random rng = new();
-
-    public static void Shuffle<T>(this IList<T> list)
+    public static void Shuffle<T>(this List<T> list)
     {
-        int n = list.Count;
-        while (n > 1)
-        {
-            n--;
-            int k = rng.Next(n + 1);
-            (list[n], list[k]) = (list[k], list[n]);
-        }
+        var span = CollectionsMarshal.AsSpan(list);
+        RandomNumberGenerator.Shuffle(span);
     }
 }
