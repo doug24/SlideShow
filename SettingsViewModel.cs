@@ -8,22 +8,24 @@ public partial class SettingsViewModel : ObservableObject
 {
     public event EventHandler? SettingsClosed;
 
-    public void Initialize()
+    public void Load()
     {
-        Interval = Properties.Settings.Default.Interval;
-        Sort = Properties.Settings.Default.Sort;
-        Shuffle = Properties.Settings.Default.Shuffle;
-        ShowInfo = Properties.Settings.Default.ShowInfo;
+        AppSettings.Load();
+
+        Interval = AppSettings.Instance.Interval;
+        Sort = AppSettings.Instance.Sort;
+        Shuffle = AppSettings.Instance.Shuffle;
+        ShowInfo = AppSettings.Instance.ShowInfo;
     }
 
     public void Save()
     {
-        Properties.Settings.Default.Interval = Interval;
-        Properties.Settings.Default.Sort = Sort;
-        Properties.Settings.Default.Shuffle = Shuffle;
-        Properties.Settings.Default.ShowInfo = ShowInfo;
+        AppSettings.Instance.Interval = Interval;
+        AppSettings.Instance.Sort = Sort;
+        AppSettings.Instance.Shuffle = Shuffle;
+        AppSettings.Instance.ShowInfo = ShowInfo;
 
-        Properties.Settings.Default.Save();
+        AppSettings.Save();
     }
 
     [ObservableProperty]

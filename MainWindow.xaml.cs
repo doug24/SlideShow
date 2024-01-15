@@ -27,7 +27,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         viewModel = new SettingsViewModel();
-        viewModel.Initialize();
+        viewModel.Load();
         DataContext = viewModel;
         settingsView.DataContext = viewModel;
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
@@ -67,7 +67,7 @@ public partial class MainWindow : Window
             info.Visibility = viewModel.ShowInfo ? Visibility.Visible : Visibility.Collapsed;
             status.Visibility = viewModel.ShowInfo ? Visibility.Visible : Visibility.Collapsed;
 
-            string location = Properties.Settings.Default.ImageDirectory;
+            string location = AppSettings.Instance.ImageDirectory;
 
             if (string.IsNullOrEmpty(location) || !Directory.Exists(location))
             {
@@ -333,8 +333,8 @@ public partial class MainWindow : Window
         if (dlg.ShowDialog() ?? false)
         {
             location = dlg.FolderName;
-            Properties.Settings.Default.ImageDirectory = location;
-            Properties.Settings.Default.Save();
+            AppSettings.Instance.ImageDirectory = location;
+            AppSettings.Save();
         }
         return location;
     }
