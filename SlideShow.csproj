@@ -18,11 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.49-beta">
       <PrivateAssets>all</PrivateAssets>
       <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
     </PackageReference>
-    <PackageReference Include="NaturalSort.Extension" Version="4.2.0" />
+    <PackageReference Include="NaturalSort.Extension" Version="4.3.0-alpha" />
   </ItemGroup>
 
 </Project>
